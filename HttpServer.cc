@@ -2,9 +2,9 @@
 #include<signal.h>
 #include<unistd.h>
 
-void Guide(sting proc)
+void Guide(std::string proc)
 {
-    cout<<"Usage "<<proc<<" port"<<endl;
+    std::cout<<"Usage "<<proc<<" port"<<std::endl;
 }
 
 int main(int argc, char * argv[])
@@ -18,9 +18,13 @@ int main(int argc, char * argv[])
     signal(SIGPIPE, SIG_IGN);
 
     HttpServer hp(atoi(argv[1]));
-    hp.Init();
-    hp.Start();
+    hp.InitServer();
+    hp.StartServer();
 
-    delete hp;
+    //delete hp;
+    std::cout<<"see you agine"<<std::endl;
     return 0;
+
+    //test git usage;
+
 }
