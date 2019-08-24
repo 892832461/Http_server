@@ -32,9 +32,6 @@ std::string GetLogLevel(int level_)
 
 
 
-
-
-
 void Log(int level_,std::string message_,std::string file_,int line_)
 {
     std::cout<< "[ " << GetTimeStamp() << " ]" <<"["<<GetLogLevel(level_)<<"]" << "[ " << file_ << " : " << line_ <<" ]" << message_ << std::endl;

@@ -1,19 +1,25 @@
 #ifndef __HTTP_SERVER_HPP__
 #define __HTTP_SERVER_HPP__
 
-//#include"Execute.hpp"
+
+
 #include"ProtocolUtil.hpp"
 #include<pthread.h>
+#include"ThreadPool.hpp"
+
 
 class HttpServer
 {
 private:
     int listen_sock;
     int port;
-    int maximum_length;
+    ThreadPool *tp;
+    std::string IP;
+
 public:
-    HttpServer(int port_):port(port_),listen_sock(-1),maximum_length(5) 
-    {}
+    HttpServer(int port_,std::string arg):listen_sock(-1),port(port_),IP(arg)
+    { }
+
 
     void InitServer()
     {
@@ -27,11 +33,11 @@ public:
         int opt_ = 1;
         setsockopt(listen_sock,SOL_SOCKET,SO_REUSEADDR,&opt_,sizeof(opt_));
 
-        
         struct sockaddr_in local_;
         local_.sin_family = AF_INET;
         local_.sin_port = htons(port);
-        local_.sin_addr.s_addr = INADDR_ANY;
+        //local_.sin_addr.s_addr = INADDR_ANY;
+        local_.sin_addr.s_addr = inet_addr(IP.c_str());
         
         if(bind(listen_sock, (struct sockaddr*)&local_,sizeof(local_)) < 0)
         {
@@ -39,18 +45,22 @@ public:
             exit(3);
         }
         
-        if(listen(listen_sock,maximum_length) < 0)
+        if(listen(listen_sock,5) < 0)
         {
             LOG(ERROR,"listen socket error");
             exit(4);
         }
-
+        
+        tp = new ThreadPool();
+        tp->initThreadPool();
         LOG(INFO,"InitServer success!");
     }
 
+        
+        
     void StartServer()
     {
-        LOG(INFO,"Start Server begin");
+        LOG(INFO,"Server is up and running");
         while(1)
         {
             struct sockaddr_in peer_;
@@ -62,13 +72,15 @@ public:
                 LOG(WARNING,"accept error");
                 continue;
             }
-            LOG(INFO,"Get new client,Create thread handler request.");
-            pthread_t tid_;
-            int *sockp_ = new int;
-            *sockp_ = sock_;
-            pthread_create(&tid_,NULL,Run::SayHi,(void*)sockp_);
+            LOG(INFO,"Get new client");
+        
+            Task t;
+            t.SetTask(sock_,Run::HandlerRequest);
+            tp->PushTask(t);
+            
         }
     }
+            
 
     ~HttpServer()
     {
